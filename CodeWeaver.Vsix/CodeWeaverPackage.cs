@@ -69,6 +69,10 @@ namespace CodeWeaver.Vsix
         {
             GenericCommand<WeaveProjectCommand>.Initialize(this);
             GenericCommand<UnWeaveProjectCommand>.Initialize(this);
+            GenericCommand<WeaveEditorMethodCommand>.Initialize(this);
+            GenericCommand<UnWeaveEditorMethodCommand>.Initialize(this);
+            GenericCommand<WeaveEditorClassCommand>.Initialize(this);
+            GenericCommand<UnWeaveEditorClassCommand>.Initialize(this);
             base.Initialize();
         }
 

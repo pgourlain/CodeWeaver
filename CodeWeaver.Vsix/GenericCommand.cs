@@ -17,6 +17,11 @@ namespace CodeWeaver.Vsix
     internal abstract class SimpleCommand
     {
         /// <summary>
+        /// Command menu group (command set GUID).
+        /// </summary>
+        public static readonly Guid CommandSet = new Guid("e52f0deb-8e33-4714-9d18-cd65f35c84fd");
+
+        /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
         protected Package package;
@@ -30,8 +35,79 @@ namespace CodeWeaver.Vsix
                 return this.package;
             }
         }
+        protected abstract void GetCmdId(out int commandId);
 
-        protected abstract void GetCmdSetAndCmdId(out Guid commandSet, out int commandId);
+        class MyMenuCommand : MenuCommand
+        {
+            Func<int> _getEnabled;
+            public MyMenuCommand(EventHandler handler, CommandID id, Func<int> getEnabled) 
+                : base (handler, id)
+            {
+                _getEnabled = getEnabled;
+            }
+
+            public override bool Enabled
+            {
+                get
+                {
+                    Trace.WriteLine("MyMenuCommand.Enabled");
+                    return base.Enabled;
+                }
+
+                set
+                {
+                    base.Enabled = value;
+                }
+            }
+
+            public override int OleStatus
+            {
+                get
+                {
+                    if (_getEnabled != null)
+                    {
+                        var result = _getEnabled();
+                        if (result >= 0)
+                        {
+                            this.Enabled = result == 0 ? false : true;
+                        }
+                    }
+                    return base.OleStatus;
+                }
+            }
+
+            public override bool Supported
+            {
+                get
+                {
+                    Trace.WriteLine("MyMenuCommand.Supported");
+                    return base.Supported;
+                }
+
+                set
+                {
+                    base.Supported = value;
+                }
+            }
+
+            public override bool Visible
+            {
+                get
+                {
+                    Trace.WriteLine("MyMenuCommand.Visible");
+                    return base.Visible;
+                }
+
+                set
+                {
+                    base.Visible = value;
+                }
+            }
+            protected override void OnCommandChanged(EventArgs e)
+            {
+                //base.OnCommandChanged(e);
+            }
+        }
 
         internal void Initialize(Package package)
         {
@@ -45,13 +121,17 @@ namespace CodeWeaver.Vsix
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                Guid cmdSet;
                 int cmdId;
-                GetCmdSetAndCmdId(out cmdSet, out cmdId);
-                var menuCommandID = new CommandID(cmdSet, cmdId);
-                var menuItem = new MenuCommand(this.OnMenuClick, menuCommandID);
+                GetCmdId(out cmdId);
+                var menuCommandID = new CommandID(CommandSet, cmdId);
+                var menuItem = new MyMenuCommand(this.OnMenuClick, menuCommandID, this.GetIsEnabled);
                 commandService.AddCommand(menuItem);
             }
+        }
+
+        protected virtual int GetIsEnabled()
+        {
+            return -1;
         }
 
         protected virtual void OnMenuClick(object sender, EventArgs e)

@@ -30,14 +30,8 @@ namespace CodeWeaver.Vsix
         /// </summary>
         public const int CommandId = 0x0100;
 
-        /// <summary>
-        /// Command menu group (command set GUID).
-        /// </summary>
-        public static readonly Guid CommandSet = new Guid("e52f0deb-8e33-4714-9d18-cd65f35c84fd");
-
-        protected override void GetCmdSetAndCmdId(out Guid commandSet, out int commandId)
+        protected override void GetCmdId(out int commandId)
         {
-            commandSet = CommandSet;
             commandId = CommandId;
         }
 

@@ -10,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace CodeWeaver.Vsix.Processor
 {
-    class DocumentWeaver
+    public class DocumentWeaver
     {
         const string MARKER = "//$PGO$/0X200X150X080X31/$PGO$";
         public const string RESULTMARKER = "__result_pgo_";
         const string EXCEPTIONVARNAME = "__e__";
         public const string LoggerFullName = "WeaverReport.Logger";
 
-        Document _doc;
-        public DocumentWeaver(Document doc)
+        SyntaxTree _doc;
+        public DocumentWeaver(SyntaxTree doc)
         {
             if (doc == null) throw new ArgumentNullException("doc");
             _doc = doc;
@@ -27,71 +27,156 @@ namespace CodeWeaver.Vsix.Processor
         /// weave code
         /// </summary>
         /// <returns></returns>
-        public Document Weave(/* todo report method can be provided*/)
+        public SyntaxTree Weave(/* todo report method can be provided*/)
         {
-            var root = _doc.GetSyntaxRootAsync().Result;
+            var root = _doc.GetRootAsync().Result;
             var resultDoc = _doc;
             var foundMethods = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(HasNotBeenWeaved);
 
             Dictionary<BlockSyntax, BlockSyntax> dico = new Dictionary<BlockSyntax, BlockSyntax>();
             foreach (var m in foundMethods)
             {
-                //finally just to trace ref/out/and result
-                BlockSyntax tryBlock = ReplaceReturn(m);
-                var catchClause = CatchClause(m);
-                //add try/catch
-                var tryStatement = SyntaxFactory.TryStatement(
-                    //try with marker in order be able to remove
-                    SyntaxFactory.Token(SyntaxKind.TryKeyword)
-                        .WithTrailingTrivia(SyntaxFactory.Comment(MARKER), SyntaxFactory.CarriageReturn),
-                    tryBlock, 
-                    //catch clauses
-                    new SyntaxList<CatchClauseSyntax>().Add(catchClause),
-                    //finally if needed
-                    FinallyClause(m));
-                var oldBody = m.Body;
-                var bodyStatements = AddAdditionnalDeclaration(m, new SyntaxList<StatementSyntax>());
-                //.Add(/*result declation for functions*/)
-                bodyStatements = bodyStatements.Add(tryStatement);
-                //update body to give a new one
-                var newBody = m.Body.Update(m.Body.OpenBraceToken,
-                    bodyStatements, 
-                    m.Body.CloseBraceToken);
+                BlockSyntax oldBody, newBody;
+                WeaveMethod(m, out oldBody, out newBody);
                 dico.Add(oldBody, newBody);
             }
             var newRoot = root.ReplaceNodes(dico.Keys, (x, y) => dico[x]);
-            var newDoc = resultDoc.WithSyntaxRoot(newRoot);
-            resultDoc = Formatter.FormatAsync(newDoc).Result;
+            resultDoc = resultDoc.WithRootAndOptions(newRoot, _doc.Options);
             return resultDoc;
         }
 
-        public Document UnWeave()
+        public SyntaxTree Weave(SyntaxNode y)
         {
-            var root = _doc.GetSyntaxRootAsync().Result;
+            MethodDeclarationSyntax dcs = y as MethodDeclarationSyntax;
+            if (dcs != null) return this.Weave(dcs);
+            ClassDeclarationSyntax cds = y as ClassDeclarationSyntax;
+            if (cds != null) return this.Weave(cds);
+            return null;
+        }
+
+        public SyntaxTree UnWeave(SyntaxNode y)
+        {
+            MethodDeclarationSyntax dcs = y as MethodDeclarationSyntax;
+            if (dcs != null) return this.UnWeave(dcs);
+            ClassDeclarationSyntax cds = y as ClassDeclarationSyntax;
+            if (cds != null) return this.UnWeave(cds);
+            return null;
+        }
+
+        public SyntaxTree Weave(MethodDeclarationSyntax m)
+        {
+            var root = _doc.GetRootAsync().Result;
             var resultDoc = _doc;
+            BlockSyntax oldBody, newBody;
+            if (HasNotBeenWeaved(m))
+            {
+                WeaveMethod(m, out oldBody, out newBody);
+                var newRoot = root.ReplaceNode(oldBody, newBody);
+                resultDoc = resultDoc.WithRootAndOptions(newRoot, _doc.Options);
+                return resultDoc;
+            }
+            return null;
+
+        }
+        public SyntaxTree UnWeave(MethodDeclarationSyntax m)
+        {
+            //return this.WeaveOrUnWeave(new MethodDeclarationSyntax[] { m }, UnWeaveMethod);
+            var root = _doc.GetRootAsync().Result;
+            var resultDoc = _doc;
+            BlockSyntax oldBody, newBody;
+            if (this.UnWeaveMethod(m, out oldBody, out newBody))
+            {
+                var newRoot = root.ReplaceNode(oldBody, newBody);
+                resultDoc = resultDoc.WithRootAndOptions(newRoot, _doc.Options);
+                return resultDoc;
+            }
+            return null;
+        }
+
+        public SyntaxTree Weave(ClassDeclarationSyntax c)
+        {
+            var foundMethods = c.ChildNodes().OfType<MethodDeclarationSyntax>().Where(HasNotBeenWeaved);
+            return WeaveOrUnWeave(foundMethods, WeaveMethod);
+        }
+
+        public SyntaxTree UnWeave(ClassDeclarationSyntax c)
+        {
+            var foundMethods = c.ChildNodes().OfType<MethodDeclarationSyntax>().Where(HasBeenWeaved);
+            return WeaveOrUnWeave(foundMethods, UnWeaveMethod);
+        }
+
+        public SyntaxTree UnWeave()
+        {
+            var root = _doc.GetRootAsync().Result;
             var foundMethods = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(HasBeenWeaved);
+            return WeaveOrUnWeave(foundMethods, UnWeaveMethod);
+        }
+
+        #region private methods
+        private delegate TResult SpecialFunc<T, T1, T2, TResult>(T arg, out T1 arg1, out T2 arg2);
+
+        private SyntaxTree WeaveOrUnWeave(IEnumerable<MethodDeclarationSyntax> foundMethods, SpecialFunc<MethodDeclarationSyntax, BlockSyntax, BlockSyntax, bool> weaveOrUnweave)
+        {
+            var root = _doc.GetRootAsync().Result;
+            var resultDoc = _doc;
 
             Dictionary<BlockSyntax, BlockSyntax> dico = new Dictionary<BlockSyntax, BlockSyntax>();
             foreach (var m in foundMethods)
             {
-                Func<SyntaxTriviaList, bool> hasMarker = (x) => x.Any(y => y.ToString() == MARKER);
-                Func<TryStatementSyntax, bool> filterByMarker = (x) => { return x.TryKeyword.HasTrailingTrivia && hasMarker(x.TryKeyword.TrailingTrivia); };
-                //search for try
-                var trystatement = m.Body.Statements.OfType<TryStatementSyntax>().Where(filterByMarker).FirstOrDefault();
-                if (trystatement != null)
+                BlockSyntax oldBody, newBody;
+                if (weaveOrUnweave(m, out oldBody, out newBody))
                 {
-                    var oldBody = m.Body;
-                    var newBody = Replace__result_pgo(m, trystatement.Block);
                     dico.Add(oldBody, newBody);
                 }
             }
             var newRoot = root.ReplaceNodes(dico.Keys, (x, y) => dico[x]);
-            var newDoc = resultDoc.WithSyntaxRoot(newRoot);
-            resultDoc = Formatter.FormatAsync(newDoc).Result;
+            resultDoc = resultDoc.WithRootAndOptions(newRoot, _doc.Options);
             return resultDoc;
         }
 
-        #region private methods
+        private bool UnWeaveMethod(MethodDeclarationSyntax m, out BlockSyntax oldBody, out BlockSyntax newBody)
+        {
+            oldBody = null;
+            newBody = null;
+            Func<SyntaxTriviaList, bool> hasMarker = (x) => x.Any(y => y.ToString() == MARKER);
+            Func<TryStatementSyntax, bool> filterByMarker = (x) => { return x.TryKeyword.HasTrailingTrivia && hasMarker(x.TryKeyword.TrailingTrivia); };
+            //search for try
+            var trystatement = m.Body.Statements.OfType<TryStatementSyntax>().Where(filterByMarker).FirstOrDefault();
+            if (trystatement != null)
+            {
+                oldBody = m.Body;
+                newBody = Replace__result_pgo(m, trystatement.Block);
+                return true;
+            }
+
+            return false;
+
+        }
+        private bool WeaveMethod(MethodDeclarationSyntax m, out BlockSyntax oldBody, out BlockSyntax newBody)
+        {
+            //finally just to trace ref/out/and result
+            BlockSyntax tryBlock = ReplaceReturn(m);
+            var catchClause = CatchClause(m);
+            //add try/catch
+            var tryStatement = SyntaxFactory.TryStatement(
+                //try with marker in order be able to remove
+                SyntaxFactory.Token(SyntaxKind.TryKeyword)
+                    .WithTrailingTrivia(SyntaxFactory.Comment(MARKER), SyntaxFactory.CarriageReturn),
+                tryBlock,
+                //catch clauses
+                new SyntaxList<CatchClauseSyntax>().Add(catchClause),
+                //finally if needed
+                FinallyClause(m));
+            oldBody = m.Body;
+            var bodyStatements = AddAdditionnalDeclaration(m, new SyntaxList<StatementSyntax>());
+            //.Add(/*result declation for functions*/)
+            bodyStatements = bodyStatements.Add(tryStatement);
+            //update body to give a new one
+            newBody = m.Body.Update(m.Body.OpenBraceToken,
+                bodyStatements,
+                m.Body.CloseBraceToken);
+            return true;
+        }
 
         private BlockSyntax ReplaceReturn(MethodDeclarationSyntax m)
         {
@@ -196,6 +281,11 @@ namespace CodeWeaver.Vsix.Processor
             else
             {
                 var structe = ancestors.OfType<StructDeclarationSyntax>().FirstOrDefault();
+                if (structe == null)
+                {
+                    //it's just a peace of code with out class or struct
+                    return result;
+                }
                 result = structe.Identifier.Text + "." + result;
                 classOrStruct = structe;
             }

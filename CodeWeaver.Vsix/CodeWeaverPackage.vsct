@@ -39,6 +39,9 @@
       <Group guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverProjGroup" priority="0x0200">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_PROJNODE"/>
       </Group>
+      <Group guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" priority="0x0200">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      </Group>
     </Groups>
 
     <!--Buttons section. -->
@@ -61,9 +64,39 @@
       </Button>
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidUnWeavesThisProject" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverProjGroup" />
-        <Icon guid="guidImages" id="bmpPic1" />
+        <Icon guid="guidImages" id="bmpPic2" />
         <Strings>
           <ButtonText>UnWeaves this project</ButtonText>
+        </Strings>
+      </Button>
+      <!-- Editor : method -->
+      <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidWeavesThisMethod" priority="0x0100" type="Button">
+        <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Weave this method</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidUnWeavesThisMethod" priority="0x0100" type="Button">
+        <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
+        <Icon guid="guidImages" id="bmpPic2" />
+        <Strings>
+          <ButtonText>UnWeave this method</ButtonText>
+        </Strings>
+      </Button>
+      <!-- Editor : class -->
+      <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidWeavesThisClass" priority="0x0100" type="Button">
+        <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
+        <Icon guid="guidImages" id="bmpPic1" />
+        <Strings>
+          <ButtonText>Weave this class</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidUnWeavesThisClass" priority="0x0100" type="Button">
+        <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
+        <Icon guid="guidImages" id="bmpPic2" />
+        <Strings>
+          <ButtonText>UnWeave this class</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -86,8 +119,13 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidRunCodeWeaverOnProjectPackageCmdSet" value="{e52f0deb-8e33-4714-9d18-cd65f35c84fd}">
       <IDSymbol name="CodeWeaverProjGroup" value="0x1020" />
+      <IDSymbol name="CodeWeaverEditorGroup" value="0x1021" />
       <IDSymbol name="cmdidWeavesThisProject" value="0x0100" />
       <IDSymbol name="cmdidUnWeavesThisProject" value="0x0101" />
+      <IDSymbol name="cmdidWeavesThisMethod" value="0x0102" />
+      <IDSymbol name="cmdidUnWeavesThisMethod" value="0x0103" />
+      <IDSymbol name="cmdidWeavesThisClass" value="0x0104" />
+      <IDSymbol name="cmdidUnWeavesThisClass" value="0x0105" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{ef0897ed-8845-4332-9e42-81b1fd81bf43}" >

@@ -3,7 +3,9 @@
   <Metadata>
     <Identity Id="CodeWeaver.Vsix.Pierrick Gourlain.a9b6e005-dc9b-44c9-82c3-a4e03086feb9" Version="1.0" Language="en-US" Publisher="Pierrick Gourlain" />
     <DisplayName>CodeWeaver.Vsix</DisplayName>
-    <Description>Empty VSIX Project.</Description>
+    <Description xml:space="preserve">This extension helps you to trace methods's inputs and outputs. Roslyn is use to wave/unwave methods</Description>
+    <Icon>Resources\RunCodeWeaverOnProjectPackage.ico</Icon>
+    <PreviewImage>Resources\icon200.png</PreviewImage>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0]" />
