@@ -38,9 +38,11 @@ namespace CodeWeaver.Vsix
             WeaverHelper.WeaveOrUnWeaveFromEditor((x,y) => x.UnWeave(y));
         }
 
-        protected override int GetIsEnabled()
+        protected override bool UpdateVisibleAndEnabled(out bool visible, out bool enabled)
         {
-            return WeaverHelper.CaretIsInMethod() ? 1 : 0;
+            visible = WeaverHelper.CaretIsInCSharpDocument();
+            enabled = WeaverHelper.CaretIsInMethod();
+            return true;
         }
     }
 }

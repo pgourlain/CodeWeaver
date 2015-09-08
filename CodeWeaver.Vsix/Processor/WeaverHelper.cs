@@ -27,6 +27,7 @@ namespace CodeWeaver.Vsix.Processor
     {
         class CaretContent
         {
+            public bool invalidDocument = false;
             public SyntaxToken token;
             public SyntaxTrivia trivia;
             public SyntaxNode GetMethodDeclarationFromTrivia()
@@ -45,6 +46,12 @@ namespace CodeWeaver.Vsix.Processor
                 }
                 return trivia.GetClassDeclarationFromTrivia();
             }
+        }
+
+        internal static bool CaretIsInCSharpDocument()
+        {
+            var caretContent = GetCaretTrivia();
+            return (caretContent != null && caretContent.invalidDocument == false);
         }
         #region private methods
 
@@ -83,7 +90,7 @@ namespace CodeWeaver.Vsix.Processor
             var point = position.BufferPosition;
             //extensions in 'Microsoft.CodeAnalysis.EditorFeatures.Text'
             doc = point.Snapshot.GetOpenDocumentInCurrentContextWithChanges();
-            if (doc == null) return null;
+            if (doc == null) return new CaretContent { invalidDocument = true};
             var root = doc.GetSyntaxRootAsync().Result;
             if (root == null) return null;
             var token = root.FindToken(point.Position);
@@ -91,15 +98,6 @@ namespace CodeWeaver.Vsix.Processor
 
             var trivia = token.Parent.FindTrivia(point.Position);
             return new CaretContent { token = token, trivia = trivia };
-            //    var trivia = root.FindTrivia(point.Position);
-            //if (trivia.IsKind(SyntaxKind.None))
-            //{
-            //    if (!token.IsKind(SyntaxKind.None))
-            //    {
-            //        Trace.WriteLine("hourra !");
-            //    }
-            //}
-            //return trivia;
         }
 
         private static CaretContent GetCaretTrivia()
@@ -186,7 +184,7 @@ namespace CodeWeaver.Vsix.Processor
         public static bool CaretIsInMethod()
         {
             var caretContent = GetCaretTrivia();
-            if (caretContent == null)
+            if (caretContent == null || caretContent.invalidDocument)
             {
                 Trace.WriteLine("no trivia at caret position");
                 return false;
@@ -203,7 +201,7 @@ namespace CodeWeaver.Vsix.Processor
         public static bool CaretIsInClass()
         {
             var caretContent = GetCaretTrivia();
-            if (caretContent == null)
+            if (caretContent == null || caretContent.invalidDocument)
             {
                 Trace.WriteLine("no trivia at caret position");
                 return false;

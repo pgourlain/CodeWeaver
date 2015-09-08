@@ -14,6 +14,7 @@ using static Microsoft.VisualStudio.Shell.ThreadedWaitDialogHelper;
 
 namespace CodeWeaver.Vsix
 {
+    public delegate bool UpdateVisibleAndEnabledFunc<T, T1>(out T arg, out T1 arg1);
     internal abstract class SimpleCommand
     {
         /// <summary>
@@ -37,13 +38,14 @@ namespace CodeWeaver.Vsix
         }
         protected abstract void GetCmdId(out int commandId);
 
+        
         class MyMenuCommand : MenuCommand
         {
-            Func<int> _getEnabled;
-            public MyMenuCommand(EventHandler handler, CommandID id, Func<int> getEnabled) 
+            UpdateVisibleAndEnabledFunc<bool, bool> _updateCmdFun;
+            public MyMenuCommand(EventHandler handler, CommandID id, UpdateVisibleAndEnabledFunc<bool, bool> updateCmdFun) 
                 : base (handler, id)
             {
-                _getEnabled = getEnabled;
+                _updateCmdFun = updateCmdFun;
             }
 
             public override bool Enabled
@@ -64,49 +66,30 @@ namespace CodeWeaver.Vsix
             {
                 get
                 {
-                    if (_getEnabled != null)
-                    {
-                        var result = _getEnabled();
-                        if (result >= 0)
-                        {
-                            this.Enabled = (result > 0);
-                        }
-                    }
+                    UpdateVisibleAndEnabled();
                     return base.OleStatus;
                 }
             }
 
-            public override bool Supported
-            {
-                get
-                {
-                    Trace.WriteLine("MyMenuCommand.Supported");
-                    return base.Supported;
-                }
-
-                set
-                {
-                    base.Supported = value;
-                }
-            }
-
-            public override bool Visible
-            {
-                get
-                {
-                    Trace.WriteLine("MyMenuCommand.Visible");
-                    return base.Visible;
-                }
-
-                set
-                {
-                    base.Visible = value;
-                }
-            }
             protected override void OnCommandChanged(EventArgs e)
             {
                 //base.OnCommandChanged(e);
             }
+
+            private void UpdateVisibleAndEnabled()
+            {
+                if (_updateCmdFun != null)
+                {
+                    bool visible, enabled;
+                    if ( _updateCmdFun(out visible, out enabled))
+                    {
+                        this.Enabled = enabled;
+                        //seems that not working....
+                        this.Visible = visible;
+                    }
+                }
+            }
+
         }
 
         internal void Initialize(Package package)
@@ -124,14 +107,16 @@ namespace CodeWeaver.Vsix
                 int cmdId;
                 GetCmdId(out cmdId);
                 var menuCommandID = new CommandID(CommandSet, cmdId);
-                var menuItem = new MyMenuCommand(this.OnMenuClick, menuCommandID, this.GetIsEnabled);
+                var menuItem = new MyMenuCommand(this.OnMenuClick, menuCommandID, this.UpdateVisibleAndEnabled);
                 commandService.AddCommand(menuItem);
             }
         }
 
-        protected virtual int GetIsEnabled()
+        protected virtual bool UpdateVisibleAndEnabled(out bool visible, out bool enabled)
         {
-            return -1;
+            visible = false;
+            enabled = false;
+            return false;
         }
 
         protected virtual void OnMenuClick(object sender, EventArgs e)
