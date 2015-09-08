@@ -9,6 +9,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CodeWeaver.Vsix.Processor
 {
+    /// <summary>
+    /// rewriter in order to remove weaving
+    /// </summary>
     class Result_pgo_Replacement : CSharpSyntaxRewriter
     {
         MethodDeclarationSyntax _m;
@@ -54,19 +57,20 @@ namespace CodeWeaver.Vsix.Processor
         ExpressionSyntax foundAssignment;
         public override SyntaxNode VisitExpressionStatement(ExpressionStatementSyntax node)
         {
-            if (node.Expression is AssignmentExpressionSyntax)
+            var aes = node.Expression as AssignmentExpressionSyntax;
+            if (aes != null)
             {
-                var ex = (AssignmentExpressionSyntax)node.Expression;
-                if (ex.Left is IdentifierNameSyntax && ((IdentifierNameSyntax)ex.Left).Identifier.Text == DocumentWeaver.RESULTMARKER)
+                if (aes.Left is IdentifierNameSyntax && ((IdentifierNameSyntax)aes.Left).Identifier.Text == DocumentWeaver.RESULTMARKER)
                 {
-                    foundAssignment = ex.Right;
+                    foundAssignment = aes.Right;
                     //to delete this statement
                     return null;
                 }
             }
-            if (node.Expression is InvocationExpressionSyntax)
+            var ies = node.Expression as InvocationExpressionSyntax;
+            if (ies != null)
             {
-                var newNode = VisitInvocationExpression((InvocationExpressionSyntax)node.Expression);
+                var newNode = VisitInvocationExpression(ies);
                 if (newNode == null) return null;
             }
             return base.VisitExpressionStatement(node);
@@ -74,7 +78,7 @@ namespace CodeWeaver.Vsix.Processor
 
         public override SyntaxNode VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            MemberAccessExpressionSyntax subExpression = node.Expression as MemberAccessExpressionSyntax;
+            var subExpression = node.Expression as MemberAccessExpressionSyntax;
             if (subExpression != null && subExpression.Expression !=null && DocumentWeaver.LoggerFullName.Equals(subExpression.Expression.ToString()))
             {
                 return null;

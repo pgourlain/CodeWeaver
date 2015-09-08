@@ -20,10 +20,10 @@ namespace CodeWeaver.Vsix
         {
             var explorer = ((EnvDTE80.DTE2)Package.GetGlobalService(typeof(EnvDTE.DTE))).ToolWindows.SolutionExplorer;
             var items = (object[])explorer.SelectedItems;
-            List<string> l = new List<string>();
+            var l = new List<string>();
             foreach (EnvDTE.UIHierarchyItem item in items)
             {
-                EnvDTE.Project project = (EnvDTE.Project)item.Object;
+                var project = (EnvDTE.Project)item.Object;
                 //EnvDTE.Configuration config = project.ConfigurationManager.ActiveConfiguration;
                 //string projectPath = Path.GetDirectoryName(project.FileName);
                 //string outputPath = config.Properties.Item("OutputPath").Value.ToString();
@@ -36,9 +36,7 @@ namespace CodeWeaver.Vsix
         internal static string SelectedSolution()
         {
             var dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            if (dte.Solution != null)
-                return dte.Solution.FullName;
-            return null;
+            return (dte.Solution != null) ? dte.Solution.FullName : null;
         }
 
         public static IVsTextView GetTextView(EnvDTE.DTE dte, EnvDTE.Document document)

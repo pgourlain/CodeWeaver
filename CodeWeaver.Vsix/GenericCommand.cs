@@ -24,7 +24,7 @@ namespace CodeWeaver.Vsix
         /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
-        protected Package package;
+        private Package package;
         /// <summary>
         /// Gets the service provider from the owner package.
         /// </summary>
@@ -67,10 +67,8 @@ namespace CodeWeaver.Vsix
                     if (_getEnabled != null)
                     {
                         var result = _getEnabled();
-                        if (result >= 0)
-                        {
-                            this.Enabled = result == 0 ? false : true;
-                        }
+                        if ((result >= 0))
+                            this.Enabled = (result > 0);
                     }
                     return base.OleStatus;
                 }
@@ -113,12 +111,12 @@ namespace CodeWeaver.Vsix
         {
             if (package == null)
             {
-                throw new ArgumentNullException("package");
+                throw new ArgumentNullException(nameof(package));
             }
 
             this.package = package;
 
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
                 int cmdId;

@@ -48,17 +48,6 @@ namespace CodeWeaver.Vsix
         /// </summary>
         public const string PackageGuidString = "429942cc-05af-4e2c-8593-79b0efec166c";
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WeaveProjectCommand"/> class.
-        /// </summary>
-        public CodeWeaverPackage()
-        {
-            // Inside this method you can place any initialization code that does not require
-            // any Visual Studio service because at this point the package object is created but
-            // not sited yet inside Visual Studio environment. The place to do all the other
-            // initialization is the Initialize method.
-        }
-
         #region Package Members
 
         /// <summary>

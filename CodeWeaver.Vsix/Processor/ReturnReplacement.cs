@@ -9,36 +9,18 @@ using System.Threading.Tasks;
 
 namespace CodeWeaver.Vsix.Processor
 {
+    /// <summary>
+    /// rewriter in order to insert trace instructions before return keyword
+    /// </summary>
     class ReturnReplacement : CSharpSyntaxRewriter
     {
-        MethodDeclarationSyntax _m;
+        readonly MethodDeclarationSyntax _m;
         public bool modified = false;
         public ReturnReplacement(MethodDeclarationSyntax m)
         {
             _m = m;
         }
-        int testForVisualizer()
-        {
-            int[] v = Enumerable.Range(0, 10).ToArray();
 
-            foreach (var item in v.Where(x => { if (x == 34) return true; else return false; }))
-            {
-                if (item == 50) return 90;
-                else if (item == 66) return 67;
-            }
-            return 456;
-        }
-        void test(int a, ref int b, out int c)
-        {
-            c = 23;
-            var coucou = "ttoo";
-            var toto = 1;
-            Console.WriteLine(new Object[] { coucou, toto });
-            foreach (var item in Enumerable.Range(0, 100))
-            {
-                if (item % 2 == 0) return;
-            }
-        }
         public override SyntaxNode VisitReturnStatement(ReturnStatementSyntax node)
         {
             if (!IsInLambda(node))
@@ -57,10 +39,11 @@ namespace CodeWeaver.Vsix.Processor
                 var l = new List<StatementSyntax>(newNode.Statements);
                 for (int i = 0; i < l.Count; i++)
                 {
-                    if (l[i] is BlockSyntax)
+                    var bs = l[i] as BlockSyntax;
+                    if (bs != null)
                     {
-                        var count = ((BlockSyntax)l[i]).Statements.Count;
-                        foreach (var stm in ((BlockSyntax)l[i]).Statements.Reverse())
+                        var count = bs.Statements.Count;
+                        foreach (var stm in bs.Statements.Reverse())
                         {
                             l.Insert(i, stm);
                         }
@@ -85,7 +68,7 @@ namespace CodeWeaver.Vsix.Processor
 
         private StatementSyntax CreateNewReturnStm(ReturnStatementSyntax ret)
         {
-            List<StatementSyntax> statements = new List<StatementSyntax>();
+            var statements = new List<StatementSyntax>();
             var arg = DocumentWeaver.ParametersToArg(_m.ParameterList.Parameters, x => x.Modifiers.Count(y => y.Kind() == SyntaxKind.OutKeyword || y.Kind() == SyntaxKind.RefKeyword) > 0);
             if (arg != null)
                 statements.Add(DocumentWeaver.ReportStatement("PushOutArgs", SyntaxFactory.Argument(arg)));

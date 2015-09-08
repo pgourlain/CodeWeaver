@@ -22,9 +22,7 @@ namespace CodeWeaver.Vsix
         {
             CaretPosition position = textView.Caret.Position;
             SnapshotSpan? snapshotSpan = textView.BufferGraph.MapUpOrDownToFirstMatch(new SnapshotSpan(position.BufferPosition, 0), match);
-            if (snapshotSpan.HasValue)
-                return new SnapshotPoint?(snapshotSpan.Value.Start);
-            return null;
+            return (snapshotSpan.HasValue) ? new SnapshotPoint?(snapshotSpan.Value.Start) : null;
         }
 
         /// <summary>
@@ -40,7 +38,7 @@ namespace CodeWeaver.Vsix
             NormalizedSnapshotSpanCollection spans = bufferGraph.MapUpToFirstMatch(span, SpanTrackingMode.EdgeExclusive, match);
             if (!spans.Any())
                 spans = bufferGraph.MapDownToFirstMatch(span, SpanTrackingMode.EdgeExclusive, match);
-            return spans.Select(s => new SnapshotSpan?(s))
+            return spans.Select(s => s)
                         .FirstOrDefault();
         }
     }

@@ -13,8 +13,6 @@ namespace CodeWeaver.Vsix
 
         public static T GetNodeFromToken<T>(this SyntaxTrivia trivia) where T : SyntaxNode
         {
-            if (trivia == null) return null;
-            if (trivia.Token == null) return null;
             //trivia is before the first token of T, so it's before
             if (trivia.Token.Parent is T && trivia.Token.HasLeadingTrivia && trivia.Token.LeadingTrivia.Contains(trivia)) return null;
             //if trivia is after the last token
@@ -38,7 +36,8 @@ namespace CodeWeaver.Vsix
             if (node == null) return null;
             while (node != null)
             {
-                if (node is T) return (T)node;
+                var result = node as T;
+                if (node != null) return result;
                 node = node.Parent;
             }
 

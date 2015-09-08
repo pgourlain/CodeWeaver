@@ -20,7 +20,7 @@ namespace CodeWeaver.Vsix.Processor
         SyntaxTree _doc;
         public DocumentWeaver(SyntaxTree doc)
         {
-            if (doc == null) throw new ArgumentNullException("doc");
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
             _doc = doc;
         }
         /// <summary>
@@ -33,7 +33,7 @@ namespace CodeWeaver.Vsix.Processor
             var resultDoc = _doc;
             var foundMethods = root.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(HasNotBeenWeaved);
 
-            Dictionary<BlockSyntax, BlockSyntax> dico = new Dictionary<BlockSyntax, BlockSyntax>();
+            var dico = new Dictionary<BlockSyntax, BlockSyntax>();
             foreach (var m in foundMethods)
             {
                 BlockSyntax oldBody, newBody;
@@ -47,20 +47,18 @@ namespace CodeWeaver.Vsix.Processor
 
         public SyntaxTree Weave(SyntaxNode y)
         {
-            MethodDeclarationSyntax dcs = y as MethodDeclarationSyntax;
+            var dcs = y as MethodDeclarationSyntax;
             if (dcs != null) return this.Weave(dcs);
-            ClassDeclarationSyntax cds = y as ClassDeclarationSyntax;
-            if (cds != null) return this.Weave(cds);
-            return null;
+            var cds = y as ClassDeclarationSyntax;
+            return (cds != null) ? this.Weave(cds) : null;
         }
 
         public SyntaxTree UnWeave(SyntaxNode y)
         {
-            MethodDeclarationSyntax dcs = y as MethodDeclarationSyntax;
+            var dcs = y as MethodDeclarationSyntax;
             if (dcs != null) return this.UnWeave(dcs);
-            ClassDeclarationSyntax cds = y as ClassDeclarationSyntax;
-            if (cds != null) return this.UnWeave(cds);
-            return null;
+            var cds = y as ClassDeclarationSyntax;
+            return (cds != null) ? this.UnWeave(cds) : null;
         }
 
         public SyntaxTree Weave(MethodDeclarationSyntax m)
@@ -120,7 +118,7 @@ namespace CodeWeaver.Vsix.Processor
             var root = _doc.GetRootAsync().Result;
             var resultDoc = _doc;
 
-            Dictionary<BlockSyntax, BlockSyntax> dico = new Dictionary<BlockSyntax, BlockSyntax>();
+            var dico = new Dictionary<BlockSyntax, BlockSyntax>();
             foreach (var m in foundMethods)
             {
                 BlockSyntax oldBody, newBody;
@@ -141,7 +139,7 @@ namespace CodeWeaver.Vsix.Processor
             Func<SyntaxTriviaList, bool> hasMarker = (x) => x.Any(y => y.ToString() == MARKER);
             Func<TryStatementSyntax, bool> filterByMarker = (x) => { return x.TryKeyword.HasTrailingTrivia && hasMarker(x.TryKeyword.TrailingTrivia); };
             //search for try
-            var trystatement = m.Body.Statements.OfType<TryStatementSyntax>().Where(filterByMarker).FirstOrDefault();
+            var trystatement = m.Body.Statements.OfType<TryStatementSyntax>().FirstOrDefault(filterByMarker);
             if (trystatement != null)
             {
                 oldBody = m.Body;
@@ -196,7 +194,7 @@ namespace CodeWeaver.Vsix.Processor
 
         private CatchClauseSyntax CatchClause(MethodDeclarationSyntax m)
         {
-            List<StatementSyntax> statements = new List<StatementSyntax>();
+            var statements = new List<StatementSyntax>();
             //trace exception
             statements.Add(ReportStatement("PushException", SyntaxFactory.Argument(SyntaxFactory.IdentifierName("__e__"))));
             //rethrow it
@@ -234,31 +232,17 @@ namespace CodeWeaver.Vsix.Processor
             return result;
         }
 
-        void test(int a, ref int b, out int c)
-        {
-            c = 23;
-            var coucou = "ttoo";
-            var toto = 1;
-            Console.WriteLine(new Object[] { coucou, toto });
-            //Console.WriteLine(new Object { coucou, toto });
-        }
-
         internal static ExpressionSyntax ParametersToArg(SeparatedSyntaxList<ParameterSyntax> parameters, Func<ParameterSyntax, bool> paramFilter)
         {
-            List<ExpressionSyntax> identifiers = new List<ExpressionSyntax>();
+            var identifiers = new List<ExpressionSyntax>();
             Func<ParameterSyntax, bool> filter = null;
-            if (paramFilter != null)
-            {
-                filter = paramFilter;
-            }
-            else
-                filter = x => true;
+            filter = paramFilter ?? (x => true);
             identifiers.AddRange(parameters.Where(filter).Select(x => SyntaxFactory.IdentifierName(x.Identifier.Text)));
             //if all identifers are 'out' and user should ignore them, so exit with null syntax
-            if (identifiers.Count <= 0) return null;
-            return SyntaxFactory.ArrayCreationExpression(SyntaxFactory.ArrayType(SyntaxFactory.IdentifierName("Object[]")),
-                SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, 
-                SyntaxFactory.SeparatedList<ExpressionSyntax>(identifiers)));
+            return (identifiers.Count <= 0) ? null : 
+                SyntaxFactory.ArrayCreationExpression(SyntaxFactory.ArrayType(SyntaxFactory.IdentifierName("Object[]")),
+                            SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, 
+                            SyntaxFactory.SeparatedList<ExpressionSyntax>(identifiers)));
         }
 
         /// <summary>

@@ -34,12 +34,9 @@ namespace CodeWeaver.Vsix.Processor
 
             var syntaxTree = doc.GetSyntaxTreeAsync().Result;
             SyntaxNode mOrc = trivia.Value.GetMethodDeclarationFromTrivia();
-            var weaver = new DocumentWeaver(syntaxTree);
-            if (mOrc == null)
-            {
-                mOrc = trivia.Value.GetClassDeclarationFromTrivia();
-            }
+            if (mOrc == null) mOrc = trivia.Value.GetClassDeclarationFromTrivia();
             if (mOrc == null) return WeaveEditorResult.NothingToWeave;
+            var weaver = new DocumentWeaver(syntaxTree);
             var newSyntaxTree = weaveOrunwaveFun(weaver, mOrc);
             if (newSyntaxTree == null) return WeaveEditorResult.AllReadyWeaveOrUnweave;
             var root = newSyntaxTree.GetRoot();
@@ -147,8 +144,6 @@ namespace CodeWeaver.Vsix.Processor
                     break;
                 case WeaveEditorResult.Ok:
                     //
-                    break;
-                default:
                     break;
             }
         }

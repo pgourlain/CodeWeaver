@@ -46,16 +46,16 @@ namespace CodeWeaver.Tests
 }
 ";
             var tree = CSharpSyntaxTree.ParseText(sourceCode);
-            var token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker1"));
+            var token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker1", StringComparison.Ordinal));
             Assert.IsNull(token.GetMethodDeclarationFromTrivia());
 
-            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker2"));
+            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker2", StringComparison.Ordinal));
             Assert.IsNotNull(token.GetMethodDeclarationFromTrivia());
-            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker3"));
+            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker3", StringComparison.Ordinal));
             Assert.IsNull(token.GetMethodDeclarationFromTrivia());
-            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker1")-3);
+            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker1", StringComparison.Ordinal) - 3);
             Assert.IsNull(token.GetMethodDeclarationFromTrivia());
-            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker4"));
+            token = tree.GetRoot().FindTrivia(sourceCode.IndexOf("//#Marker4", StringComparison.Ordinal));
             Assert.IsNotNull(token.GetMethodDeclarationFromTrivia());
 
         }
