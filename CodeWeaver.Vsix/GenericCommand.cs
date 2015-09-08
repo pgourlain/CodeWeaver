@@ -67,8 +67,10 @@ namespace CodeWeaver.Vsix
                     if (_getEnabled != null)
                     {
                         var result = _getEnabled();
-                        if ((result >= 0))
+                        if (result >= 0)
+                        {
                             this.Enabled = (result > 0);
+                        }
                     }
                     return base.OleStatus;
                 }

@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.VisualStudio.Shell.ThreadedWaitDialogHelper;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CodeWeaver.Vsix.Processor
 {
@@ -23,18 +25,39 @@ namespace CodeWeaver.Vsix.Processor
     }
     class WeaverHelper
     {
+        class CaretContent
+        {
+            public SyntaxToken token;
+            public SyntaxTrivia trivia;
+            public SyntaxNode GetMethodDeclarationFromTrivia()
+            {
+                if (trivia.IsKind(SyntaxKind.None))
+                {
+                    return token.GetMethodDeclarationFromToken();
+                }
+                return trivia.GetMethodDeclarationFromTrivia();
+            }
+            public SyntaxNode GetClassDeclarationFromTrivia()
+            {
+                if (trivia.IsKind(SyntaxKind.None))
+                {
+                    return token.GetClassDeclarationFromToken();
+                }
+                return trivia.GetClassDeclarationFromTrivia();
+            }
+        }
         #region private methods
 
         private static WeaveEditorResult InternalWeaveOrUnWeaveFromEditor(Func<DocumentWeaver, SyntaxNode, SyntaxTree> weaveOrunwaveFun)
         {
             Document doc;
             IWpfTextView wpfView;
-            var trivia = GetCaretTrivia(out doc, out wpfView);
-            if (trivia == null) return WeaveEditorResult.ActiveDocumentGotFocusFailed;
+            var caretContent = GetCaretTrivia(out doc, out wpfView);
+            if (caretContent == null) return WeaveEditorResult.ActiveDocumentGotFocusFailed;
 
             var syntaxTree = doc.GetSyntaxTreeAsync().Result;
-            SyntaxNode mOrc = trivia.Value.GetMethodDeclarationFromTrivia();
-            if (mOrc == null) mOrc = trivia.Value.GetClassDeclarationFromTrivia();
+            SyntaxNode mOrc = caretContent.GetMethodDeclarationFromTrivia();
+            if (mOrc == null) mOrc = caretContent.GetClassDeclarationFromTrivia();
             if (mOrc == null) return WeaveEditorResult.NothingToWeave;
             var weaver = new DocumentWeaver(syntaxTree);
             var newSyntaxTree = weaveOrunwaveFun(weaver, mOrc);
@@ -46,7 +69,7 @@ namespace CodeWeaver.Vsix.Processor
             return WeaveEditorResult.Ok;
         }
 
-        private static SyntaxTrivia? GetCaretTrivia(out Document doc, out IWpfTextView wpfView)
+        private static CaretContent GetCaretTrivia(out Document doc, out IWpfTextView wpfView)
         {
             doc = null;
             var dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
@@ -63,11 +86,23 @@ namespace CodeWeaver.Vsix.Processor
             if (doc == null) return null;
             var root = doc.GetSyntaxRootAsync().Result;
             if (root == null) return null;
-            var token = root.FindTrivia(point.Position);
-            return token;
+            var token = root.FindToken(point.Position);
+            if (token.IsKind(SyntaxKind.None)) return null;
+
+            var trivia = token.Parent.FindTrivia(point.Position);
+            return new CaretContent { token = token, trivia = trivia };
+            //    var trivia = root.FindTrivia(point.Position);
+            //if (trivia.IsKind(SyntaxKind.None))
+            //{
+            //    if (!token.IsKind(SyntaxKind.None))
+            //    {
+            //        Trace.WriteLine("hourra !");
+            //    }
+            //}
+            //return trivia;
         }
 
-        private static SyntaxTrivia? GetCaretTrivia()
+        private static CaretContent GetCaretTrivia()
         {
             Document doc;
             IWpfTextView wpfView;
@@ -150,18 +185,36 @@ namespace CodeWeaver.Vsix.Processor
 
         public static bool CaretIsInMethod()
         {
-            var trivia = GetCaretTrivia();
-            if (trivia == null) return false;
-            SyntaxNode mOrc = trivia.Value.GetMethodDeclarationFromTrivia();
-            return mOrc != null;
+            var caretContent = GetCaretTrivia();
+            if (caretContent == null)
+            {
+                Trace.WriteLine("no trivia at caret position");
+                return false;
+            }
+            SyntaxNode mOrc = caretContent.GetMethodDeclarationFromTrivia();
+            if (mOrc!=null)
+            {
+                return true;
+            }
+            Trace.WriteLine("no method at caret position");
+            return false;
         }
 
         public static bool CaretIsInClass()
         {
-            var trivia = GetCaretTrivia();
-            if (trivia == null) return false;
-            SyntaxNode mOrc = trivia.Value.GetClassDeclarationFromTrivia();
-            return mOrc != null;
+            var caretContent = GetCaretTrivia();
+            if (caretContent == null)
+            {
+                Trace.WriteLine("no trivia at caret position");
+                return false;
+            }
+            SyntaxNode mOrc = caretContent.GetClassDeclarationFromTrivia();
+            if (mOrc != null)
+            {
+                return true;
+            }
+            Trace.WriteLine("no class at caret position");
+            return false;
         }
     }
 }

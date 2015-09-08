@@ -13,14 +13,15 @@ namespace CodeWeaver.Vsix
 
         public static T GetNodeFromToken<T>(this SyntaxTrivia trivia) where T : SyntaxNode
         {
+            var token = trivia.Token;
             //trivia is before the first token of T, so it's before
-            if (trivia.Token.Parent is T && trivia.Token.HasLeadingTrivia && trivia.Token.LeadingTrivia.Contains(trivia)) return null;
+            if (token.Parent is T && token.HasLeadingTrivia && token.LeadingTrivia.Contains(trivia)) return null;
             //if trivia is after the last token
-            if (trivia.Token.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.CloseBraceToken)
-                && trivia.Token.HasTrailingTrivia
-                && trivia.Token.TrailingTrivia.Contains(trivia))
+            if (token.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.CloseBraceToken)
+                && token.HasTrailingTrivia
+                && token.TrailingTrivia.Contains(trivia))
             {
-                SyntaxNode n = trivia.Token.Parent;
+                SyntaxNode n = token.Parent;
 
                 while (true)
                 {
@@ -32,12 +33,26 @@ namespace CodeWeaver.Vsix
                     n = nextParent;
                 }
             }
-            var node = trivia.Token.Parent;
+            return token.GetNodeFromToken<T>();
+            //var node = token.Parent;
+            //if (node == null) return null;
+            //while (node != null)
+            //{
+            //    var result = node as T;
+            //    if (result != null) return result;
+            //    node = node.Parent;
+            //}
+
+            //return null;
+        }
+        public static T GetNodeFromToken<T>(this SyntaxToken token) where T : SyntaxNode
+        {
+            var node = token.Parent;
             if (node == null) return null;
             while (node != null)
             {
                 var result = node as T;
-                if (node != null) return result;
+                if (result != null) return result;
                 node = node.Parent;
             }
 
@@ -52,6 +67,15 @@ namespace CodeWeaver.Vsix
         public static ClassDeclarationSyntax GetClassDeclarationFromTrivia(this SyntaxTrivia trivia)
         {
             return GetNodeFromToken<ClassDeclarationSyntax>(trivia);
+        }
+
+        public static MethodDeclarationSyntax GetMethodDeclarationFromToken(this SyntaxToken token)
+        {
+            return GetNodeFromToken<MethodDeclarationSyntax>(token);
+        }
+        public static ClassDeclarationSyntax GetClassDeclarationFromToken(this SyntaxToken token)
+        {
+            return GetNodeFromToken<ClassDeclarationSyntax>(token);
         }
     }
 }
