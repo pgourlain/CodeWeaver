@@ -4,26 +4,26 @@
 - only csharp is supported
 === sample ===
 original code :
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World !");
-        }
+static void Main(string[] args)
+{
+    Console.WriteLine("Hello World !");
+}
 weaved code:
-        static void Main(string[] args)
-        {
-            WeaverReport.Logger.BeginReport("ConsoleApplication1.Program.Main");
-            WeaverReport.Logger.PushArgs(new Object[] { args });
-            try//$PGO$/0X200X150X080X31/$PGO$
-            {
-                Console.WriteLine("Hello World !");
-            }
-            catch (System.Exception __e__)
-            {
-                WeaverReport.Logger.PushException(__e__);
-                throw __e__;
-            }
-            finally
-            {
-                WeaverReport.Logger.EndReport();
-            }
-        }
+static void Main(string[] args)
+{
+    WeaverReport.Logger.BeginReport("ConsoleApplication1.Program.Main");
+    WeaverReport.Logger.PushArgs(new Object[] { args });
+    try//$PGO$/0X200X150X080X31/$PGO$
+    {
+        Console.WriteLine("Hello World !");
+    }
+    catch (System.Exception __e__)
+    {
+        WeaverReport.Logger.PushException(__e__);
+        throw __e__;
+    }
+    finally
+    {
+        WeaverReport.Logger.EndReport();
+    }
+}
