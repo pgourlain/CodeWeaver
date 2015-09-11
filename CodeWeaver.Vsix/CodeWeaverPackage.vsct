@@ -54,7 +54,9 @@
           You can add more than one CommandFlag node e.g.:
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
-          If you do not want an image next to your command, remove the Icon node /> -->
+          If you do not want an image next to your command, remove the Icon node />
+          PGO : MSDN help : https://msdn.microsoft.com/en-us/library/bb491716.aspx
+          -->
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidWeavesThisProject" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverProjGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
@@ -73,13 +75,17 @@
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidWeavesThisMethod" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <Strings>
-          <ButtonText>Weave this method</ButtonText>
+          <ButtonText>Weave this method</ButtonText>          
         </Strings>
       </Button>
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidUnWeavesThisMethod" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
         <Icon guid="guidImages" id="bmpPic2" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>UnWeave this method</ButtonText>
         </Strings>
@@ -88,6 +94,8 @@
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidWeavesThisClass" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
         <Icon guid="guidImages" id="bmpPic1" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>Weave this class</ButtonText>
         </Strings>
@@ -95,6 +103,8 @@
       <Button guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="cmdidUnWeavesThisClass" priority="0x0100" type="Button">
         <Parent guid="guidRunCodeWeaverOnProjectPackageCmdSet" id="CodeWeaverEditorGroup" />
         <Icon guid="guidImages" id="bmpPic2" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DontCache</CommandFlag>
         <Strings>
           <ButtonText>UnWeave this class</ButtonText>
         </Strings>

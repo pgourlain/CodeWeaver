@@ -80,7 +80,13 @@ namespace CodeWeaver.Vsix.Processor
         {
             doc = null;
             var dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            wpfView = VSTools.GetWpfTextView(dte, dte.ActiveDocument);
+            var activeDoc = dte.ActiveDocument;
+            if (activeDoc == null)
+            {
+                //if an editor is host by a toolwindow
+                activeDoc = dte.ActiveWindow != null ? dte.ActiveWindow.Document : null;
+            }
+            wpfView = VSTools.GetWpfTextView(dte, activeDoc);
             if (wpfView == null)
             {
                 return null;

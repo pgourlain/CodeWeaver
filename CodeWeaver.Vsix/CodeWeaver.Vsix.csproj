@@ -53,21 +53,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="RoslynExtensions.cs" />
-    <Compile Include="UnWeaveEditorClassCommand.cs" />
+    <Compile Include="Commands\UnWeaveEditorClassCommand.cs" />
     <Compile Include="VSToolsExtensions.cs" />
-    <Compile Include="WeaveEditorClassCommand.cs" />
-    <Compile Include="GenericCommand.cs" />
+    <Compile Include="Commands\WeaveEditorClassCommand.cs" />
+    <Compile Include="Commands\GenericCommand.cs" />
     <Compile Include="Processor\DocumentWeaver.cs" />
     <Compile Include="Processor\Result_pgo_Replacement.cs" />
     <Compile Include="Processor\ReturnReplacement.cs" />
     <Compile Include="Processor\WeaverHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Refactoring1.cs" />
-    <Compile Include="UnWeaveEditorMethodCommand.cs" />
-    <Compile Include="UnWeaveProjectCommand.cs" />
+    <Compile Include="Commands\UnWeaveEditorMethodCommand.cs" />
+    <Compile Include="Commands\UnWeaveProjectCommand.cs" />
     <Compile Include="VSTools.cs" />
-    <Compile Include="WeaveEditorMethodCommand.cs" />
-    <Compile Include="WeaveProjectCommand.cs" />
+    <Compile Include="Commands\WeaveEditorMethodCommand.cs" />
+    <Compile Include="Commands\WeaveProjectCommand.cs" />
     <Compile Include="CodeWeaverPackage.cs" />
   </ItemGroup>
   <ItemGroup>

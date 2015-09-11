@@ -35,13 +35,14 @@ namespace CodeWeaver.Vsix
     /// To get loaded into VS, the package must be referred by &lt;Asset Type="Microsoft.VisualStudio.VsPackage" ...&gt; in .vsixmanifest file.
     /// </para>
     /// </remarks>
+    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(CodeWeaverPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class CodeWeaverPackage : Package
+    public sealed class CodeWeaverPackage : Package, IOleCommandTarget
     {
         /// <summary>
         /// RunCodeWeaverOnProjectPackage GUID string.
@@ -64,6 +65,26 @@ namespace CodeWeaver.Vsix
             GenericCommand<UnWeaveEditorClassCommand>.Initialize(this);
             base.Initialize();
         }
+
+        int IOleCommandTarget.Exec(ref Guid guidGroup, uint nCmdId, uint nCmdExcept, IntPtr pIn, IntPtr vOut)
+        {
+            IOleCommandTarget oleCommandTarget = (IOleCommandTarget)this.GetService(typeof(IOleCommandTarget));
+            if (oleCommandTarget != null)
+            {
+                return oleCommandTarget.Exec(ref guidGroup, nCmdId, nCmdExcept, pIn, vOut);
+            }
+            return -2147221248;
+        }
+        int IOleCommandTarget.QueryStatus(ref Guid guidGroup, uint nCmdId, OLECMD[] nCmdExcept, IntPtr pCmdText)
+        {
+            IOleCommandTarget oleCommandTarget = (IOleCommandTarget)this.GetService(typeof(IOleCommandTarget));
+            if (oleCommandTarget != null)
+            {
+                return oleCommandTarget.QueryStatus(ref guidGroup, nCmdId, nCmdExcept, pCmdText);
+            }
+            return -2147221248;
+        }
+
 
         #endregion
     }

@@ -67,6 +67,8 @@ namespace CodeWeaver.Vsix
         }
         public static IWpfTextView GetWpfTextView(EnvDTE.DTE dte, EnvDTE.Document document)
         {
+            if (document == null)
+                return null;
             using (ServiceProvider sp = new ServiceProvider((Microsoft.VisualStudio.OLE.Interop.IServiceProvider)dte))
             {
 

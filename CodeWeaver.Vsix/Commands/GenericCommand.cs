@@ -85,7 +85,7 @@ namespace CodeWeaver.Vsix
                     {
                         this.Enabled = enabled;
                         //seems that not working....
-                        this.Visible = visible;
+                        this.Visible = enabled;
                     }
                 }
             }
