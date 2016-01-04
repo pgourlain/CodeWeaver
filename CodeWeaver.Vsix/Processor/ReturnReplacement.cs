@@ -70,8 +70,6 @@ namespace CodeWeaver.Vsix.Processor
         {
             var statements = new List<StatementSyntax>();
             var arg = DocumentWeaver.ParametersToArg(_m.ParameterList.Parameters, x => x.Modifiers.Count(y => y.Kind() == SyntaxKind.OutKeyword || y.Kind() == SyntaxKind.RefKeyword) > 0);
-            if (arg != null)
-                statements.Add(DocumentWeaver.ReportStatement("PushOutArgs", SyntaxFactory.Argument(arg)));
             if (DocumentWeaver.IsFunction(_m))
             {
                 //pushResult
@@ -82,11 +80,17 @@ namespace CodeWeaver.Vsix.Processor
                 statements.Add(SyntaxFactory.ExpressionStatement(newNode));
                 //pushresult (speacialvar)
                 statements.Add(DocumentWeaver.ReportStatement("PushResult", SyntaxFactory.Argument(SyntaxFactory.IdentifierName(DocumentWeaver.RESULTMARKER))));
+                //place here values of ref/out args
+                if (arg != null)
+                    statements.Add(DocumentWeaver.ReportStatement("PushOutArgs", SyntaxFactory.Argument(arg)));
                 //return specialvar
                 statements.Add(returnVar);
             }
             else
             {
+                //place here values of ref/out args
+                if (arg != null)
+                    statements.Add(DocumentWeaver.ReportStatement("PushOutArgs", SyntaxFactory.Argument(arg)));
                 //if void method there is no expression after return, so we add the same expression 'return;'
                 statements.Add(ret);
             }
